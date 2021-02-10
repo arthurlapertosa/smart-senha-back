@@ -17,7 +17,7 @@ exports.createPassword = async (req, res) => {
   }
 };
 
-exports.getPassword = async (req, res) => {
+exports.getUserPassword = async (req, res) => {
   const { id } = req.params;
   try {
     const { rows } = await db.query(
@@ -29,6 +29,23 @@ exports.getPassword = async (req, res) => {
       throw "password_not_found";
     }
     res.status(200).send(rows[0]);
+  } catch (error) {
+    console.error("getPassword", error);
+    res.status(500).send({
+      message: "Ocorreu um erro.",
+    });
+  }
+};
+
+exports.getPassword = async (req, res) => {
+  try {
+    const { rows } = await db.query(`SELECT 
+                                      id,
+                                      user_id, 
+                                      already_attended, 
+                                      created_at
+                                    FROM password ORDER BY id`);
+    res.status(200).send(rows);
   } catch (error) {
     console.error("getPassword", error);
     res.status(500).send({
