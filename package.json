@@ -4,7 +4,7 @@
   "description": "Smart senha",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
@@ -19,7 +19,9 @@
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
+    "eslint-friendly-formatter": "^4.0.1",
     "express": "^4.17.1",
-    "pg": "^8.5.1"
+    "express-promise-router": "^4.0.1",
+    "pg": "^8.3.0"
   }
 }
