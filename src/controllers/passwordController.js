@@ -1,16 +1,17 @@
 const db = require("../config/database");
 
 exports.createPassword = async (req, res) => {
-  const { user_id } = req.body;
+  const user_id = res.locals.userAuthenticated.id;
   try {
-    const { rows } = await db.query(
-      `INSERT INTO password (user_id) VALUES ${user_id}`
+    const result = await db.query(
+      `INSERT INTO password (user_id) VALUES (${user_id}) returning id`
     );
     res.status(201).send({
       message: `Password created for user ${user_id}`,
+      id: result.rows[0].id,
     });
   } catch (error) {
-    console.error("createEmployee", error);
+    console.error(error);
     res.status(500).send({
       message: "Ocorreu um erro.",
     });
@@ -18,7 +19,7 @@ exports.createPassword = async (req, res) => {
 };
 
 exports.getUserPassword = async (req, res) => {
-  const { id } = req.params;
+  const { id } = res.locals.userAuthenticated;
   try {
     const { rows } = await db.query(
       `SELECT id
