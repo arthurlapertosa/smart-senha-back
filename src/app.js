@@ -14,7 +14,9 @@ app.use(express.json({ type: "application/vnd.api+json" }));
 app.use(cors());
 
 app.use(index);
-app.use("/api/", usersRoute);
-app.use("/api/", passwordRoute);
+
+const baseUrl = '/api'
+app.use(`${baseUrl}/users`, usersRoute);
+app.use(`${baseUrl}/password`, passwordRoute);
 
 module.exports = app;
