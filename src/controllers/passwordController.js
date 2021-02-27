@@ -2,12 +2,23 @@ const db = require("../config/database");
 
 exports.createPassword = async (req, res) => {
   const user_id = res.locals.userAuthenticated.id;
+  const { establishmentId } = req.body;
+  if (!establishmentId) {
+    return res.status(422).send({ error: 'Missing "establishmentId" in body' });
+  }
   try {
+    const rows = await getUserPassword(user_id);
+    if (rows.length > 0) {
+      // User already have a password.
+      return res.status(403).send({
+        error: 'User already have an active password. Please complete or cancel the current password before creating another.'
+      });
+    }
     const result = await db.query(
-      `INSERT INTO password (user_id) VALUES (${user_id}) returning id`
+      `INSERT INTO password (user_id, establishment) VALUES (${user_id}, ${establishmentId}) returning id`
     );
     res.status(201).send({
-      message: `Password created for user ${user_id}`,
+      message: `Password created for user ${user_id} and establishment ${establishmentId}`,
       id: result.rows[0].id,
     });
   } catch (error) {
@@ -21,15 +32,23 @@ exports.createPassword = async (req, res) => {
 exports.getUserPassword = async (req, res) => {
   const { id } = res.locals.userAuthenticated;
   try {
-    const { rows } = await db.query(
-      `SELECT id
-        FROM password WHERE user_id = ${id} and already_attended = false
-        order by id limit 1`
-    );
+    const rows = await getUserPassword(id);
     if (!rows.length) {
       throw "password_not_found";
     }
-    res.status(200).send(rows[0]);
+    const password = rows[0];
+    const count = await db.query(
+      `SELECT COUNT(*)
+        FROM password
+        WHERE already_attended=false
+        AND establishment=${password.establishment}
+        AND id<${password.id}`
+    );
+    if (!count.rows.length) {
+      throw "server_error";
+    }
+    const usersAhead = parseInt(count.rows[0].count);
+    res.status(200).send({ ...password, usersAhead });
   } catch (error) {
     console.error("getPassword", error);
     res.status(500).send({
@@ -42,7 +61,8 @@ exports.getPassword = async (req, res) => {
   try {
     const { rows } = await db.query(`SELECT 
                                       id,
-                                      user_id, 
+                                      user_id,
+                                      establishment, 
                                       already_attended, 
                                       created_at
                                     FROM password ORDER BY id`);
@@ -54,3 +74,12 @@ exports.getPassword = async (req, res) => {
     });
   }
 };
+
+const getUserPassword = async (userId) => {
+  const { rows } = await db.query(
+    `SELECT id, establishment
+      FROM password WHERE user_id = ${userId} and already_attended = false
+      order by id limit 1`
+  );
+  return rows;
+}

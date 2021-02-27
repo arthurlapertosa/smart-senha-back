@@ -7,6 +7,7 @@ const app = express();
 const index = require("./routes/index");
 const usersRoute = require("./routes/users");
 const passwordRoute = require("./routes/password");
+const establishmentRoute = require("./routes/establishment");
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -18,5 +19,6 @@ app.use(index);
 const baseUrl = '/api'
 app.use(`${baseUrl}/users`, usersRoute);
 app.use(`${baseUrl}/password`, passwordRoute);
+app.use(`${baseUrl}/establishment`, establishmentRoute);
 
 module.exports = app;
