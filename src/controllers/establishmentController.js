@@ -17,7 +17,7 @@ exports.isOnRadius = async (req, res) => {
   longitude = req.body.longitude;
   try {
     row = await db.query(`SELECT latitude, longitude, raio FROM establishment where id = ${req.params.id}`);
-    distance = distanceInKmBetweenEarthCoordinates (latitude, row.rows[0].latitude, longitude, row.rows[0].longitude);
+    distance = distanceInKmBetweenEarthCoordinates (latitude, longitude, row.rows[0].latitude, row.rows[0].longitude);
     if (distance > row.rows[0].raio) {
       return res.status(401).send({
         message: "Usuário está fora da zona de raio configurada pelo cliente.",
