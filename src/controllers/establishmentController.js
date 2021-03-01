@@ -12,6 +12,27 @@ exports.getEstablishments = async (req, res) => {
   }
 };
 
+exports.isOnRadius = async (req, res) => {
+  const { id } = res.locals.userAuthenticated;
+  latitude = req.body.latitude;
+  longitude = req.body.longitude;
+  try {
+    const { row } = await db.query(`SELECT latitude, longitude, raio FROM establishment where id = ${id}`);
+    distance = distanceInKmBetweenEarthCoordinates (latitude, row.latitude, longitude, row.longitude);
+    if (distance > row.raio) {
+      es.status(401).send({
+        message: "Usuário está fora da zona de raio configurada pelo cliente.",
+      });
+    }
+    res.status(200).send(row);
+  } catch (error) {
+    console.error("isOnRadius", error);
+    res.status(500).send({
+      message: "Ocorreu um erro.",
+    });
+  }
+}
+
 function degreesToRadians(degrees) {
   return degrees * Math.PI / 180;
 }
