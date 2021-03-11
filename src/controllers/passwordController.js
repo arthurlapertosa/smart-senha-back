@@ -80,14 +80,15 @@ exports.getPasswordsByEstablishment = async (req, res) => {
   try {
     const { rows } = await db.query(
       `SELECT 
-        id,
-        user_id,
+        password.id,
+        username,
+        password.user_id,
         establishment, 
         already_attended, 
-        created_at
+        password.created_at
       FROM password
-      where establishment = ${req.params.id}
-        and already_attended = false
+      INNER JOIN users ON password.user_id = users.id
+      where establishment = ${parseInt(req.params.id)}
       ORDER BY id `
     );
     res.status(200).send(rows);
@@ -109,6 +110,22 @@ exports.deletePassword = async (req, res) => {
     res.status(200).send(rows);
   } catch (error) {
     console.error("getPassword", error);
+    res.status(500).send({
+      message: "Ocorreu um erro.",
+    });
+  }
+};
+
+exports.markPasswordAsComplete = async (req, res) => {
+  try {
+    const { rows } = await db.query(
+      `UPDATE password
+       SET already_attended = true
+       WHERE id = ${parseInt(req.params.id)}`
+    );
+    res.status(200).send({ success: true });
+  } catch (error) {
+    console.error("markPasswordAsComplete", error);
     res.status(500).send({
       message: "Ocorreu um erro.",
     });
