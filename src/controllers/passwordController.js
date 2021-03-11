@@ -11,7 +11,8 @@ exports.createPassword = async (req, res) => {
     if (rows.length > 0) {
       // User already have a password.
       return res.status(403).send({
-        error: 'User already have an active password. Please complete or cancel the current password before creating another.'
+        error:
+          "User already have an active password. Please complete or cancel the current password before creating another.",
       });
     }
     const result = await db.query(
@@ -75,6 +76,45 @@ exports.getPassword = async (req, res) => {
   }
 };
 
+exports.getPasswordsByEstablishment = async (req, res) => {
+  try {
+    const { rows } = await db.query(
+      `SELECT 
+        id,
+        user_id,
+        establishment, 
+        already_attended, 
+        created_at
+      FROM password
+      where establishment = ${req.params.id}
+        and already_attended = false
+      ORDER BY id `
+    );
+    res.status(200).send(rows);
+  } catch (error) {
+    console.error("getPassword", error);
+    res.status(500).send({
+      message: "Ocorreu um erro.",
+    });
+  }
+};
+
+exports.deletePassword = async (req, res) => {
+  try {
+    const { rows } = await db.query(
+      `delete 
+       FROM password
+       where id = ${req.params.id}`
+    );
+    res.status(200).send(rows);
+  } catch (error) {
+    console.error("getPassword", error);
+    res.status(500).send({
+      message: "Ocorreu um erro.",
+    });
+  }
+};
+
 const getUserPassword = async (userId) => {
   const { rows } = await db.query(
     `SELECT id, establishment
@@ -82,4 +122,4 @@ const getUserPassword = async (userId) => {
       order by id limit 1`
   );
   return rows;
-}
+};
