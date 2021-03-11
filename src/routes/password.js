@@ -10,5 +10,6 @@ router.get(
   passwordController.getPasswordsByEstablishment
 );
 router.delete("/:id", passwordController.deletePassword);
+router.put("/complete/:id", passwordController.markPasswordAsComplete);
 
 module.exports = router;
