@@ -132,6 +132,29 @@ exports.markPasswordAsComplete = async (req, res) => {
   }
 };
 
+exports.callPassword = async (req, res) => {
+  try {
+    const { rows } = await db.query(
+      `update password
+        set currently_calling = true
+      where id = ${req.params.id}`
+    );
+    res.status(200).send(rows);
+
+    const { rows2 } = await db.query(
+      `update password
+        set currently_calling = false
+      where id NOT in (${req.params.id})`
+    );
+    res.status(200).send(rows2);
+  } catch (error) {
+    console.error("getPassword", error);
+    res.status(500).send({
+      message: "Ocorreu um erro.",
+    });
+  }
+};
+
 const getUserPassword = async (userId) => {
   const { rows } = await db.query(
     `SELECT id, establishment

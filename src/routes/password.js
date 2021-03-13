@@ -11,5 +11,6 @@ router.get(
 );
 router.delete("/:id", passwordController.deletePassword);
 router.put("/complete/:id", passwordController.markPasswordAsComplete);
+router.put("/calling/:id", passwordController.callPassword);
 
 module.exports = router;
