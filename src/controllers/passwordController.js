@@ -64,6 +64,7 @@ exports.getPassword = async (req, res) => {
                                       id,
                                       user_id,
                                       establishment, 
+                                      currently_calling,
                                       already_attended, 
                                       created_at
                                     FROM password ORDER BY id`);
@@ -85,6 +86,7 @@ exports.getPasswordsByEstablishment = async (req, res) => {
         password.user_id,
         establishment, 
         already_attended, 
+        currently_calling,
         password.created_at
       FROM password
       INNER JOIN users ON password.user_id = users.id
@@ -160,7 +162,7 @@ exports.callPassword = async (req, res) => {
 
 const getUserPassword = async (userId) => {
   const { rows } = await db.query(
-    `SELECT id, establishment
+    `SELECT id, establishment, currently_calling
       FROM password WHERE user_id = ${userId} and already_attended = false
       order by id limit 1`
   );
