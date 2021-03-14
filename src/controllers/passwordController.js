@@ -12,7 +12,7 @@ exports.createPassword = async (req, res) => {
 
     const { rows } = await db.query(
       `SELECT id, establishment, currently_calling
-        FROM password WHERE user_id = ${user_id} and already_attended = false
+        FROM password WHERE user_id = ${user_id} and already_attended = false and canceled = false
         order by id limit 1`
     );
 
