@@ -52,10 +52,6 @@ exports.getUserPassword = async (req, res) => {
     if (!password)
       return res.status(404).send({ message: 'Senha não encontrada' })
 
-    // Valida propriedade da senha
-    if (password.user_id !== userID)
-      return res.status(401).send({ message: 'Esta senha pertence a outro usuário' })
-
     // Determina quantidade de senha anteriores a essa
     const usersQueryResult = await db.query(
       `SELECT COUNT(*)
@@ -91,12 +87,7 @@ exports.cancelPassword = async (req, res) => {
       return res.status(404).send({ message: 'Senha não encontrada' })
 
     // Cancela senha
-    await db.query(
-      `UPDATE password
-      SET canceled = true, already_attended = true
-      WHERE id = ${passwordID}`
-    );
-
+    await db.query(`UPDATE password SET canceled = true WHERE id = ${passwordID}`);
     res.sendStatus(200)
 
   } catch (error) {
