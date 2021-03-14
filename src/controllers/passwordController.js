@@ -56,7 +56,7 @@ exports.getUserPassword = async (req, res) => {
     const usersQueryResult = await db.query(
       `SELECT COUNT(*)
         FROM password
-        WHERE already_attended = false
+        WHERE already_attended = false and canceled = false
         AND establishment = ${password.establishment}
         AND id < ${password.id}`
     );
