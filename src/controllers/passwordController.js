@@ -1,13 +1,21 @@
 const db = require("../config/database");
 
 exports.createPassword = async (req, res) => {
+  
   const user_id = res.locals.userAuthenticated.id;
   const { establishmentId } = req.body;
-  if (!establishmentId) {
+  
+  if (!establishmentId)
     return res.status(422).send({ error: 'Missing "establishmentId" in body' });
-  }
+
   try {
-    const rows = await getUserPassword(user_id);
+
+    const { rows } = await db.query(
+      `SELECT id, establishment, currently_calling
+        FROM password WHERE user_id = ${user_id} and already_attended = false
+        order by id limit 1`
+    );
+
     if (rows.length > 0) {
       // User already have a password.
       return res.status(403).send({
@@ -15,46 +23,90 @@ exports.createPassword = async (req, res) => {
           "User already have an active password. Please complete or cancel the current password before creating another.",
       });
     }
+
     const result = await db.query(
       `INSERT INTO password (user_id, establishment) VALUES (${user_id}, ${establishmentId}) returning id`
     );
+
     res.status(201).send({
       message: `Password created for user ${user_id} and establishment ${establishmentId}`,
       id: result.rows[0].id,
     });
+
   } catch (error) {
     console.error(error);
-    res.status(500).send({
-      message: "Ocorreu um erro.",
-    });
+    res.status(500).send({ message: "Ocorreu um erro." });
   }
 };
 
 exports.getUserPassword = async (req, res) => {
-  const { id } = res.locals.userAuthenticated;
+  
+  const passwordID = req.params.passwordID
+  const userID = res.locals.userAuthenticated.id
+
   try {
-    const rows = await getUserPassword(id);
-    if (!rows.length) {
-      throw "password_not_found";
-    }
-    const password = rows[0];
-    const count = await db.query(
+
+    // Busca senha
+    const passwordQueryResult = await db.query(
+      `SELECT id, user_id, establishment, currently_calling, already_attended
+        FROM password WHERE id = ${passwordID} and user_id = ${userID} and already_attended = false
+        order by id limit 1`
+    );
+
+    const password = passwordQueryResult.rows[0]
+    if (!password)
+      return res.status(404).send({ message: 'Senha não encontrada' })
+
+    // Valida propriedade da senha
+    if (password.user_id !== userID)
+      return res.status(401).send({ message: 'Esta senha pertence a outro usuário' })
+
+    // Determina quantidade de senha anteriores a essa
+    const usersQueryResult = await db.query(
       `SELECT COUNT(*)
         FROM password
-        WHERE already_attended=false
-        AND establishment=${password.establishment}
-        AND id<${password.id}`
+        WHERE already_attended = false
+        AND establishment = ${password.establishment}
+        AND id < ${password.id}`
     );
-    if (!count.rows.length) {
-      throw "server_error";
-    }
-    const usersAhead = parseInt(count.rows[0].count);
-    res.status(200).send({ ...password, usersAhead });
+
+    const usersAhead = +usersQueryResult.rows[0].count
+    if (!usersAhead)
+      throw new Error('Falha ao tentar determinar quantidade de senhas a frente')
+
+    res.status(200).send({ ...password, usersAhead })
+
   } catch (error) {
     console.error("getPassword", error);
-    res.status(500).send({
-      message: "Ocorreu um erro.",
-    });
+    res.sendStatus(500)
+  }
+};
+
+
+exports.cancelPassword = async (req, res) => {
+  
+  const passwordID = req.params.passwordID
+
+  try {
+
+    // Verifica se senha existe
+    const validationQueryResult = await db.query(`SELECT COUNT(*) FROM password WHERE id = ${passwordID}`);
+    const passwordExists = !!+validationQueryResult.rows[0].count
+    if (!passwordExists)
+      return res.status(404).send({ message: 'Senha não encontrada' })
+
+    // Cancela senha
+    await db.query(
+      `UPDATE password
+      SET canceled = true, already_attended = true
+      WHERE id = ${passwordID}`
+    );
+    
+    res.sendStatus(200)
+
+  } catch (error) {
+    console.error("getPassword", error);
+    res.sendStatus(500)
   }
 };
 
@@ -158,13 +210,4 @@ exports.callPassword = async (req, res) => {
       message: "Ocorreu um erro.",
     });
   }
-};
-
-const getUserPassword = async (userId) => {
-  const { rows } = await db.query(
-    `SELECT id, establishment, currently_calling
-      FROM password WHERE user_id = ${userId} and already_attended = false
-      order by id limit 1`
-  );
-  return rows;
 };
