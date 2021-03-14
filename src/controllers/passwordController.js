@@ -100,7 +100,7 @@ exports.cancelPassword = async (req, res) => {
     res.sendStatus(200)
 
   } catch (error) {
-    console.error("getPassword", error);
+    console.error("cancelPassword", error);
     res.sendStatus(500)
   }
 };
