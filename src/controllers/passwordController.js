@@ -1,10 +1,10 @@
 const db = require("../config/database");
 
 exports.createPassword = async (req, res) => {
-  
+
   const user_id = res.locals.userAuthenticated.id;
   const { establishmentId } = req.body;
-  
+
   if (!establishmentId)
     return res.status(422).send({ error: 'Missing "establishmentId" in body' });
 
@@ -40,7 +40,7 @@ exports.createPassword = async (req, res) => {
 };
 
 exports.getUserPassword = async (req, res) => {
-  
+
   const passwordID = req.params.passwordID
   const userID = res.locals.userAuthenticated.id
 
@@ -75,7 +75,7 @@ exports.getUserPassword = async (req, res) => {
 
 
 exports.cancelPassword = async (req, res) => {
-  
+
   const passwordID = req.params.passwordID
 
   try {
@@ -123,6 +123,7 @@ exports.getPasswordsByEstablishment = async (req, res) => {
         username,
         password.user_id,
         establishment, 
+        canceled,
         already_attended, 
         currently_calling,
         password.created_at
