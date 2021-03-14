@@ -47,12 +47,7 @@ exports.getUserPassword = async (req, res) => {
   try {
 
     // Busca senha
-    const passwordQueryResult = await db.query(
-      `SELECT id, user_id, establishment, currently_calling, already_attended
-        FROM password WHERE id = ${passwordID} and user_id = ${userID} and already_attended = false
-        order by id limit 1`
-    );
-
+    const passwordQueryResult = await db.query(`SELECT * FROM password WHERE id = ${passwordID} and user_id = ${userID} order by id limit 1`);
     const password = passwordQueryResult.rows[0]
     if (!password)
       return res.status(404).send({ message: 'Senha não encontrada' })
@@ -71,7 +66,7 @@ exports.getUserPassword = async (req, res) => {
     );
 
     const usersAhead = +usersQueryResult.rows[0].count
-    if (!usersAhead)
+    if (Number.isNaN(usersAhead))
       throw new Error('Falha ao tentar determinar quantidade de senhas a frente')
 
     res.status(200).send({ ...password, usersAhead })
@@ -101,7 +96,7 @@ exports.cancelPassword = async (req, res) => {
       SET canceled = true, already_attended = true
       WHERE id = ${passwordID}`
     );
-    
+
     res.sendStatus(200)
 
   } catch (error) {
